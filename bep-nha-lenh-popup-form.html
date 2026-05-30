@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Đặt Hàng – Bếp Nhà Lénh</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#6b3fa0;
+  --primary-light:#8b5ec4;
+  --primary-bg:#f0eafa;
+  --primary-border:#c9afe8;
+  --bg:#fafaf9;
+  --surface:#ffffff;
+  --surface2:#f5f3f0;
+  --border:#e4ddd4;
+  --text:#1c1208;
+  --text-muted:#7a6a54;
+  --text-light:#b0a090;
+  --danger:#c0392b;
+  --danger-bg:#fdecea;
+  --success:#1e7e4e;
+  --success-bg:#e4f5ed;
+  --radius:10px;
+  --radius-sm:7px;
+}
+
+/* POPUP WRAPPER */
+body{
+  font-family:'Be Vietnam Pro',sans-serif;
+  background:rgba(0,0,0,0.55);
+  display:flex;align-items:flex-end;justify-content:center;
+  min-height:100vh;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.popup-sheet{
+  background:var(--surface);
+  border-radius:18px 18px 0 0;
+  width:100%;max-width:480px;
+  max-height:92vh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+
+/* DRAG HANDLE */
+.drag-handle{
+  flex-shrink:0;
+  padding:10px 0 0;
+  display:flex;align-items:center;justify-content:center;
+}
+.drag-handle::after{
+  content:'';display:block;
+  width:36px;height:4px;
+  background:var(--border);border-radius:99px;
+}
+
+/* HEADER */
+.popup-header{
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px 10px;
+  border-bottom:1px solid var(--border);
+}
+.popup-title{font-size:16px;font-weight:700;color:var(--text)}
+.popup-subtitle{font-size:11px;color:var(--text-muted);margin-top:1px}
+.close-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--surface2);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:var(--text-muted);flex-shrink:0;
+}
+.close-btn:active{background:var(--border)}
+
+/* SCROLLABLE BODY */
+.popup-body{
+  flex:1;overflow-y:auto;
+  padding:12px 14px;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* ALERT */
+.alert{
+  border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-weight:500;
+  margin-bottom:10px;display:none;line-height:1.5;
+}
+.alert.error{background:var(--danger-bg);color:var(--danger);display:block}
+
+/* SECTION LABEL */
+.sec-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--text-muted);margin:12px 0 7px;
+}
+.sec-label:first-child{margin-top:0}
+
+/* FIELDS */
+.field{margin-bottom:9px}
+.field:last-child{margin-bottom:0}
+label.lbl{display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;letter-spacing:.3px}
+label.lbl .req{color:var(--danger)}
+input[type=text],input[type=tel],select,textarea{
+  width:100%;padding:10px 12px;
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);font-family:inherit;font-size:15px;
+  color:var(--text);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  -webkit-appearance:none;appearance:none;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(107,63,160,.12);
+  background:var(--surface);
+}
+input::placeholder,textarea::placeholder{color:var(--text-light)}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a6a54' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+textarea{resize:none;height:68px}
+
+/* PRODUCT ITEMS */
+.prod-item{
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  margin-bottom:8px;overflow:hidden;
+  transition:border-color .15s;
+}
+.prod-item:last-child{margin-bottom:0}
+.prod-item.has-qty{border-color:var(--primary)}
+.prod-header{
+  display:flex;align-items:center;gap:7px;
+  padding:8px 10px;
+  background:var(--surface2);
+}
+.prod-icon{font-size:16px;line-height:1}
+.prod-name{font-size:12px;font-weight:700;color:var(--text);flex:1}
+.prod-variants{padding:6px 10px;display:flex;flex-direction:column;gap:6px}
+
+.variant-row{display:flex;align-items:center;gap:8px}
+.var-info{flex:1;min-width:0}
+.var-label{font-size:13px;color:var(--text)}
+.var-price{font-size:11px;font-weight:700;color:var(--primary-light)}
+
+/* QTY CONTROLS */
+.qty-ctrl{display:flex;align-items:center;flex-shrink:0}
+.qty-btn{
+  width:30px;height:30px;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  font-size:16px;font-weight:600;color:var(--primary);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  user-select:none;-webkit-user-select:none;
+  line-height:1;transition:background .1s;
+}
+.qty-btn:first-child{border-radius:6px 0 0 6px}
+.qty-btn:last-child{border-radius:0 6px 6px 0}
+.qty-btn:active{background:var(--primary-bg)}
+.qty-num{
+  width:32px;text-align:center;
+  font-size:14px;font-weight:700;color:var(--text);
+  border-top:1.5px solid var(--border);border-bottom:1.5px solid var(--border);
+  border-left:none;border-right:none;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface);
+}
+
+/* TOTAL */
+.total-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--primary-bg);border:1.5px solid var(--primary-border);
+  border-radius:var(--radius-sm);padding:10px 13px;margin-top:10px;
+}
+.total-label{font-size:13px;color:var(--primary);font-weight:500}
+.total-val{font-size:20px;font-weight:700;color:var(--primary)}
+
+/* FOOTER */
+.popup-footer{
+  flex-shrink:0;
+  padding:10px 14px 16px;
+  border-top:1px solid var(--border);
+  background:var(--surface);
+}
+.submit-btn{
+  width:100%;padding:14px;
+  background:var(--primary);color:#fff;
+  border:none;border-radius:var(--radius);
+  font-family:inherit;font-size:16px;font-weight:700;
+  cursor:pointer;transition:background .15s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.submit-btn:active{background:var(--primary-light)}
+.submit-btn:disabled{background:#b0a0c0;cursor:not-allowed}
+.footer-note{
+  text-align:center;font-size:11px;color:var(--text-muted);
+  margin-top:7px;line-height:1.5;
+}
+
+/* SUCCESS */
+.success-box{
+  display:none;
+  text-align:center;padding:32px 20px;
+}
+.success-box .check{font-size:44px;margin-bottom:12px}
+.success-box h3{font-size:18px;font-weight:700;color:var(--success);margin-bottom:6px}
+.success-box p{font-size:14px;color:#2d6a4a;line-height:1.65}
+.new-order-btn{
+  margin-top:16px;padding:11px 24px;
+  background:var(--success);color:#fff;
+  border:none;border-radius:var(--radius);
+  font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="popup-sheet">
+  <div class="drag-handle"></div>
+
+  <!-- HEADER -->
+  <div class="popup-header">
+    <div>
+      <div class="popup-title">🍱 Đặt hàng – Bếp Nhà Lénh</div>
+      <div class="popup-subtitle">Đặc sản gia truyền – Giao tận nơi TPHCM</div>
+    </div>
+    <button class="close-btn" onclick="window.parent.postMessage('closePopup','*')">✕</button>
+  </div>
+
+  <!-- SCROLLABLE BODY -->
+  <div class="popup-body" id="popup-body">
+    <div id="alert-box" class="alert"></div>
+
+    <div id="main-form">
+
+      <!-- THÔNG TIN -->
+      <div class="sec-label">👤 Thông tin người đặt</div>
+      <div class="field">
+        <label class="lbl">Họ tên <span class="req">*</span></label>
+        <input type="text" id="name" placeholder="Nguyễn Văn A" autocomplete="name">
+      </div>
+      <div class="field">
+        <label class="lbl">Số điện thoại / Zalo <span class="req">*</span></label>
+        <input type="tel" id="phone" placeholder="09xx xxx xxx" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label class="lbl">Địa chỉ giao hàng <span class="req">*</span></label>
+        <input type="text" id="address" placeholder="Số nhà, đường, phường, quận, TPHCM" autocomplete="street-address">
+      </div>
+
+      <!-- SẢN PHẨM -->
+      <div class="sec-label">🛍️ Chọn sản phẩm <span class="req">*</span></div>
+      <div id="product-list"></div>
+      <div class="total-row">
+        <span class="total-label">Tổng ước tính</span>
+        <span class="total-val" id="total-display">0đ</span>
+      </div>
+
+      <!-- GIAO HÀNG -->
+      <div class="sec-label">🚚 Giao hàng & ghi chú</div>
+      <div class="field">
+        <label class="lbl">Thời gian mong muốn</label>
+        <select id="delivery-time">
+          <option>Sớm nhất có thể</option>
+          <option>Buổi sáng (7h–12h)</option>
+          <option>Buổi chiều (12h–18h)</option>
+          <option>Buổi tối (18h–21h)</option>
+          <option>Hẹn ngày cụ thể (ghi bên dưới)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="lbl">Ghi chú</label>
+        <textarea id="note" placeholder="Yêu cầu đặc biệt, đóng gói quà biếu…"></textarea>
+      </div>
+
+    </div><!-- end main-form -->
+
+    <!-- SUCCESS -->
+    <div class="success-box" id="success-box">
+      <div class="check">✅</div>
+      <h3>Đặt hàng thành công!</h3>
+      <p id="success-msg">Cảm ơn bạn đã tin tưởng Bếp Nhà Lénh!<br>Chúng tôi sẽ nhắn <strong>Zalo</strong> xác nhận đơn sớm nhất.</p>
+      <button class="new-order-btn" onclick="resetForm()">+ Đặt thêm đơn mới</button>
+    </div>
+
+  </div><!-- end popup-body -->
+
+  <!-- FOOTER STICKY -->
+  <div class="popup-footer" id="popup-footer">
+    <button class="submit-btn" id="submit-btn" onclick="submitOrder()">
+      📩 Gửi Đơn Hàng
+    </button>
+    <p class="footer-note">Sau khi gửi, Bếp Nhà Lénh sẽ nhắn <strong>Zalo</strong> xác nhận đơn.</p>
+  </div>
+
+</div><!-- end popup-sheet -->
+
+<script>
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwMEMQVyBBZSR-S3wPyx7Gbf4LGpFU6aErFPTSPm0Ki1Uqvyanfy55yb5lSBA93c7gs3g/exec';
+
+const PRODUCTS = [
+  {
+    id:'kho_bo', icon:'🥩', name:'Khô Bò 1 Nắng',
+    variants:[
+      {id:'kho_bo_1kg', label:'Gói 1kg', price:600000},
+      {id:'kho_bo_500g', label:'Gói 0.5kg', price:320000},
+    ]
+  },
+  {
+    id:'gio_thu_mac_nhoi', icon:'🍥', name:'Giò Thủ Có Mộc Nhĩ',
+    variants:[
+      {id:'gt_mn_si_1kg', label:'Mua sỉ 1kg', price:270000},
+      {id:'gt_mn_le_500g', label:'Mua lẻ 0.5kg', price:140000},
+    ]
+  },
+  {
+    id:'gio_thu_khong', icon:'🍥', name:'Giò Thủ Không Mộc Nhĩ',
+    variants:[
+      {id:'gt_no_si_1kg', label:'Mua sỉ 1kg', price:280000},
+      {id:'gt_no_le_500g', label:'Mua lẻ 0.5kg', price:145000},
+    ]
+  },
+  {
+    id:'pate_gan', icon:'🍣', name:'Pate Gan SG Đặc Biệt',
+    variants:[
+      {id:'pate_1kg', label:'Gói 1kg', price:250000},
+      {id:'pate_500g', label:'Gói 0.5kg', price:130000},
+    ]
+  }
+];
+
+const qty = {};
+PRODUCTS.forEach(p => p.variants.forEach(v => qty[v.id] = 0));
+
+function fmtVND(n){ return n > 0 ? n.toLocaleString('vi-VN')+'đ' : '0đ'; }
+
+function renderProducts(){
+  document.getElementById('product-list').innerHTML = PRODUCTS.map(p => `
+    <div class="prod-item" id="pi-${p.id}">
+      <div class="prod-header">
+        <span class="prod-icon">${p.icon}</span>
+        <span class="prod-name">${p.name}</span>
+      </div>
+      <div class="prod-variants">
+        ${p.variants.map(v => `
+          <div class="variant-row">
+            <div class="var-info">
+              <div class="var-label">${v.label}</div>
+              <div class="var-price">${fmtVND(v.price)}</div>
+            </div>
+            <div class="qty-ctrl">
+              <button class="qty-btn" ontouchstart="" onclick="changeQty('${v.id}','${p.id}',-1)">−</button>
+              <div class="qty-num" id="qty-${v.id}">0</div>
+              <button class="qty-btn" ontouchstart="" onclick="changeQty('${v.id}','${p.id}',1)">+</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function changeQty(varId, prodId, delta){
+  qty[varId] = Math.max(0, (qty[varId]||0) + delta);
+  document.getElementById('qty-'+varId).textContent = qty[varId];
+  const prod = PRODUCTS.find(p => p.id === prodId);
+  const hasAny = prod.variants.some(v => qty[v.id] > 0);
+  document.getElementById('pi-'+prodId).classList.toggle('has-qty', hasAny);
+  updateTotal();
+}
+
+function updateTotal(){
+  let total = 0;
+  PRODUCTS.forEach(p => p.variants.forEach(v => total += (qty[v.id]||0) * v.price));
+  document.getElementById('total-display').textContent = fmtVND(total);
+  return total;
+}
+
+async function submitOrder(){
+  const alertBox = document.getElementById('alert-box');
+  alertBox.className = 'alert';
+
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const address = document.getElementById('address').value.trim();
+
+  if(!name){ showErr('⚠️ Vui lòng nhập họ tên.'); return; }
+  if(!phone){ showErr('⚠️ Vui lòng nhập số điện thoại / Zalo.'); return; }
+  if(!address){ showErr('⚠️ Vui lòng nhập địa chỉ giao hàng.'); return; }
+
+  const total = updateTotal();
+  if(total === 0){ showErr('⚠️ Vui lòng chọn ít nhất một sản phẩm.'); return; }
+
+  const items = [];
+  PRODUCTS.forEach(p => p.variants.forEach(v => {
+    if(qty[v.id] > 0) items.push(`${p.name} (${v.label}) x${qty[v.id]}`);
+  }));
+
+  const payload = {
+    timestamp: new Date().toLocaleString('vi-VN'),
+    name, phone, address,
+    products: items.join(' | '),
+    total,
+    total_fmt: fmtVND(total),
+    delivery: document.getElementById('delivery-time').value,
+    note: document.getElementById('note').value.trim(),
+  };
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Đang gửi…';
+
+  if(!SHEET_URL){
+    await new Promise(r => setTimeout(r, 800));
+    showSuccess(name); btn.disabled=false; btn.innerHTML='📩 Gửi Đơn Hàng';
+    return;
+  }
+
+  try{
+    await fetch(SHEET_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    showSuccess(name);
+  } catch(e){
+    showErr('❌ Gửi thất bại. Vui lòng thử lại hoặc liên hệ Zalo trực tiếp.');
+  }
+  btn.disabled=false; btn.innerHTML='📩 Gửi Đơn Hàng';
+}
+
+function showErr(msg){
+  const b = document.getElementById('alert-box');
+  b.className='alert error'; b.textContent=msg;
+  b.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function showSuccess(name){
+  document.getElementById('alert-box').className='alert';
+  document.getElementById('main-form').style.display='none';
+  document.getElementById('popup-footer').style.display='none';
+  const sb = document.getElementById('success-box');
+  sb.style.display='block';
+  document.getElementById('success-msg').innerHTML =
+    `Cảm ơn <strong>${name}</strong> đã tin tưởng Bếp Nhà Lénh!<br>Chúng tôi sẽ nhắn <strong>Zalo</strong> xác nhận đơn sớm nhất.`;
+  sb.scrollIntoView({behavior:'smooth'});
+}
+
+function resetForm(){
+  PRODUCTS.forEach(p => p.variants.forEach(v => qty[v.id]=0));
+  renderProducts(); updateTotal();
+  document.getElementById('name').value='';
+  document.getElementById('phone').value='';
+  document.getElementById('address').value='';
+  document.getElementById('note').value='';
+  document.getElementById('alert-box').className='alert';
+  document.getElementById('success-box').style.display='none';
+  document.getElementById('main-form').style.display='block';
+  document.getElementById('popup-footer').style.display='block';
+  document.getElementById('popup-body').scrollTop=0;
+}
+
+renderProducts();
+updateTotal();
+</script>
+</body>
+</html>
